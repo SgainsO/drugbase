@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaRocket, FaSearch, FaArrowLeft, FaAtom, FaChartLine } from 'react-icons/fa';
 import HeartAttackGraph from '../components/HeartAttackGraph';
-import { Line } from 'react-chartjs-2';
+import { Line, Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
@@ -22,6 +23,7 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
@@ -33,7 +35,12 @@ const mockDrugDatabase = [
   {
     id: 1,
     name: 'Nebuloxin',
+    genericName: 'Nebulox',
     category: 'Anti-inflammatory',
+    manufacturer: 'Cosmic Pharmaceuticals',
+    price: 299.99,
+    genericPrice: 149.99,
+    treatment: ['Rheumatoid Arthritis', 'Chronic Inflammation'],
     effectiveness: [65, 70, 75, 78, 82, 85, 88],
     sideEffects: [20, 18, 15, 14, 12, 10, 8],
     years: [2018, 2019, 2020, 2021, 2022, 2023, 2024],
@@ -42,7 +49,12 @@ const mockDrugDatabase = [
   {
     id: 2,
     name: 'Stellaracetam',
+    genericName: 'Stellacet',
     category: 'Anticonvulsant',
+    manufacturer: 'Stellar Meds',
+    price: 399.99,
+    genericPrice: 199.99,
+    treatment: ['Epilepsy', 'Seizure Disorders'],
     effectiveness: [50, 55, 65, 75, 80, 85, 90],
     sideEffects: [30, 25, 20, 18, 15, 12, 10],
     years: [2018, 2019, 2020, 2021, 2022, 2023, 2024],
@@ -51,7 +63,12 @@ const mockDrugDatabase = [
   {
     id: 3,
     name: 'Galaxidol',
+    genericName: 'Galaxin',
     category: 'Analgesic',
+    manufacturer: 'Galactic Health',
+    price: 199.99,
+    genericPrice: 89.99,
+    treatment: ['Chronic Pain', 'Neuropathic Pain'],
     effectiveness: [70, 72, 75, 78, 80, 85, 88],
     sideEffects: [25, 22, 20, 18, 15, 12, 10],
     years: [2018, 2019, 2020, 2021, 2022, 2023, 2024],
@@ -60,7 +77,12 @@ const mockDrugDatabase = [
   {
     id: 4,
     name: 'Cosmopril',
+    genericName: 'Cosmoprilate',
     category: 'Antihypertensive',
+    manufacturer: 'Cosmic Care',
+    price: 249.99,
+    genericPrice: 129.99,
+    treatment: ['Hypertension', 'Heart Disease'],
     effectiveness: [60, 65, 70, 75, 80, 82, 85],
     sideEffects: [15, 14, 13, 12, 10, 9, 8],
     years: [2018, 2019, 2020, 2021, 2022, 2023, 2024],
@@ -69,7 +91,12 @@ const mockDrugDatabase = [
   {
     id: 5,
     name: 'Astrozolam',
+    genericName: 'Astrozol',
     category: 'Anxiolytic',
+    manufacturer: 'Astral Pharmaceuticals',
+    price: 179.99,
+    genericPrice: 79.99,
+    treatment: ['Anxiety Disorders', 'Panic Attacks'],
     effectiveness: [75, 78, 80, 82, 85, 87, 90],
     sideEffects: [35, 30, 25, 20, 15, 12, 10],
     years: [2018, 2019, 2020, 2021, 2022, 2023, 2024],
@@ -82,6 +109,7 @@ const ContentPage = () => {
   const [selectedDrug, setSelectedDrug] = useState(null);
   const [showGraph, setShowGraph] = useState(false);
   const [filteredDrugs, setFilteredDrugs] = useState(mockDrugDatabase);
+  const [queryMode, setQueryMode] = useState('drug'); // 'drug' or 'disease'
   const starsRef = useRef(null);
   const graphRef = useRef(null);
 
@@ -115,13 +143,27 @@ const ContentPage = () => {
     if (term.trim() === '') {
       setFilteredDrugs(mockDrugDatabase);
     } else {
-      const filtered = mockDrugDatabase.filter(drug => 
-        drug.name.toLowerCase().includes(term.toLowerCase()) ||
-        drug.category.toLowerCase().includes(term.toLowerCase()) ||
-        drug.description.toLowerCase().includes(term.toLowerCase())
-      );
+      const filtered = mockDrugDatabase.filter(drug => {
+        if (queryMode === 'drug') {
+          return drug.name.toLowerCase().includes(term.toLowerCase()) ||
+                 drug.genericName.toLowerCase().includes(term.toLowerCase()) ||
+                 drug.category.toLowerCase().includes(term.toLowerCase()) ||
+                 drug.description.toLowerCase().includes(term.toLowerCase());
+        } else {
+          return drug.treatment.some(disease => 
+            disease.toLowerCase().includes(term.toLowerCase())
+          );
+        }
+      });
       setFilteredDrugs(filtered);
     }
+  };
+
+  const toggleQueryMode = () => {
+    setQueryMode(prevMode => prevMode === 'drug' ? 'disease' : 'drug');
+    setSearchTerm('');
+    setFilteredDrugs(mockDrugDatabase);
+    setSelectedDrug(null);
   };
 
   // Handle drug selection
@@ -302,12 +344,25 @@ const ContentPage = () => {
           <div className="search-section space-card" style={{ marginBottom: '40px', padding: '30px' }}>
             <h2 style={{ marginBottom: '20px' }}>Query The Database</h2>
             
+            <div style={{ marginBottom: '20px' }}>
+              <button 
+                className="space-button glow-effect"
+                onClick={toggleQueryMode}
+                style={{ marginBottom: '20px' }}
+              >
+                <FaAtom style={{ marginRight: '8px' }} /> 
+                Current Mode: {queryMode === 'drug' ? 'Drug Search' : 'Disease Search'}
+              </button>
+            </div>
+            
             <div className="search-input-container" style={{ position: 'relative' }}>
               <FaSearch style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--space-text-secondary)' }} />
               <input 
                 type="text" 
                 className="space-input" 
-                placeholder="Search by drug name, category, or description..." 
+                placeholder={queryMode === 'drug' ? 
+                  "Search by drug name, generic name, or category..." : 
+                  "Search by disease or condition..."}
                 value={searchTerm}
                 onChange={handleSearchChange}
                 style={{ paddingLeft: '45px' }}
@@ -329,11 +384,34 @@ const ContentPage = () => {
                         border: selectedDrug?.id === drug.id ? '2px solid var(--space-accent)' : '1px solid var(--space-card-border)'
                       }}
                     >
-                      <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <FaAtom color="var(--space-accent)" /> {drug.name}
-                      </h3>
-                      <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>{drug.category}</p>
-                      <p>{drug.description}</p>
+                      {queryMode === 'drug' ? (
+                        <>
+                          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <FaAtom color="var(--space-accent)" /> {drug.name}
+                          </h3>
+                          <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
+                            Generic: {drug.genericName}
+                          </p>
+                          <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
+                            Treatment: {drug.treatment.join(', ')}
+                          </p>
+                          <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
+                            Manufacturer: {drug.manufacturer}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <FaAtom color="var(--space-accent)" /> {drug.treatment.join(', ')}
+                          </h3>
+                          <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
+                            Drug: {drug.name} (${drug.price})
+                          </p>
+                          <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
+                            Generic: {drug.genericName} (${drug.genericPrice})
+                          </p>
+                        </>
+                      )}
                     </motion.div>
                   ))}
                 </div>
@@ -374,12 +452,44 @@ const ContentPage = () => {
                 </div>
                 
                 <HeartAttackGraph isVisible={showGraph}>
+                  <div style={{ marginBottom: '40px', justifyContent: 'center', alignItems: 'center'}}>
+                    <Bar 
+                      data={{
+                        labels: ['Price Comparison'],
+                        datasets: [
+                          {
+                            label: 'Brand Name Price',
+                            data: [selectedDrug?.price || 0],
+                            backgroundColor: 'rgba(110, 59, 255, 0.8)',
+                            borderColor: 'rgba(110, 59, 255, 1)',
+                            borderWidth: 1
+                          },
+                          {
+                            label: 'Generic Price',
+                            data: [selectedDrug?.genericPrice || 0],
+                            backgroundColor: 'rgba(201, 97, 255, 0.8)',
+                            borderColor: 'rgba(201, 97, 255, 1)',
+                            borderWidth: 1
+                          }
+                        ]
+                      }}
+                      options={{
+                        ...chartOptions,
+                        plugins: {
+                          ...chartOptions.plugins,
+                          title: {
+                            ...chartOptions.plugins.title,
+                            text: selectedDrug ? `${selectedDrug.name} vs ${selectedDrug.genericName} Price Comparison` : ''
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+                  
                   <div style={{ marginBottom: '40px' }}>
-                    <Line data={effectivenessData} options={chartOptions} />
                   </div>
                   
                   <div>
-                    <Line data={sideEffectsData} options={chartOptions} />
                   </div>
                 </HeartAttackGraph>
               </div>
