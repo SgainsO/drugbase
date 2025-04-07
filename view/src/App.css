@@ -1,0 +1,46 @@
+/* App specific styles */
+/* Most styles are in space-theme.css */
+
+/* Override any default styles */
+* {
+  box-sizing: border-box;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Custom scrollbar for space theme */
+::-webkit-scrollbar {
+  width: 10px;
+  background-color: var(--space-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--space-accent);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--space-button-hover);
+}
+
+/* Heart attack animation for graph reveal */
+@keyframes heartAttack {
+  0% { transform: scale(1); }
+  10% { transform: scale(1.2); }
+  20% { transform: scale(0.9); }
+  30% { transform: scale(1.1); }
+  40% { transform: scale(0.95); }
+  50% { transform: scale(1.05); }
+  60% { transform: scale(0.98); }
+  70% { transform: scale(1.02); }
+  80% { transform: scale(0.99); }
+  90% { transform: scale(1.01); }
+  100% { transform: scale(1); }
+}
+
+.heart-attack {
+  animation: heartAttack 0.8s cubic-bezier(0.215, 0.610, 0.355, 1.000);
+}
