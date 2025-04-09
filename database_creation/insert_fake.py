@@ -27,6 +27,17 @@ manufacturers = ["PharmaCorp", "MediLife", "HealWell", "BioGen", "CureTech"]
 purposes = ["Pain Relief", "Antibiotic", "Anti-inflammatory", "Antiviral", "Blood Pressure"]
 diseases = ["Flu", "Cold", "Arthritis", "Hypertension", "Infection", "COVID-19"]
 
+# Realistic drug name generators
+prefixes = ["Acu", "Ben", "Cetra", "Dolo", "Exo", "Flora", "Geno", "Hema", "Immu", "Juvo"]
+suffixes = ["dol", "vir", "mune", "cillin", "pril", "zol", "pan", "nex", "rel", "med"]
+
+def generate_drug_name(existing_names):
+    while True:
+        name = random.choice(prefixes) + random.choice(suffixes)
+        if name not in existing_names:
+            existing_names.add(name)
+            return name
+
 # Insert manufacturers
 for i, name in enumerate(manufacturers, start=1):
     cursor.execute("INSERT INTO Manufacturer VALUES (?, ?)", (i, name))
@@ -36,16 +47,18 @@ for i, disease in enumerate(diseases, start=1):
     cursor.execute("INSERT INTO Disease VALUES (?, ?)", (i, disease))
 
 # Insert brand-name drugs
+used_drug_names = set()
 for drug_id in range(1, 21):
-    name = f"NBDrug{drug_id}"
+    name = generate_drug_name(used_drug_names)
     price = random.randint(20, 100)
     purpose = random.choice(purposes)
     man_id = random.randint(1, len(manufacturers))
     cursor.execute("INSERT INTO NBDrugs VALUES (?, ?, ?, ?, ?)", (drug_id, name, price, purpose, man_id))
 
 # Insert generics
+used_generic_names = set()
 for gen_id in range(1, 16):
-    name = f"Generic{gen_id}"
+    name = generate_drug_name(used_generic_names)
     price = random.randint(10, 50)
     purpose = random.choice(purposes)
     cursor.execute("INSERT INTO Generics VALUES (?, ?, ?, ?)", (gen_id, name, price, purpose))
@@ -67,4 +80,4 @@ for _ in range(25):
 conn.commit()
 conn.close()
 
-print("Fake data inserted successfully.")
+print("Fake data with better names inserted successfully.")
