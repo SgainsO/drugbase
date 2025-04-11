@@ -8,7 +8,7 @@ class database:
         cur = self.db.cursor() 
         lenOfFilter = len(filter)
         cur.execute("""
-        SELECT nbd.Name, nbd.DrugID, GROUP_CONCAT(DISTINCT g.Name), GROUP_CONCAT(DISTINCT d.Name), m.Name 
+        SELECT nbd.Name, nbd.DrugID, GROUP_CONCAT(DISTINCT g.Name), GROUP_CONCAT(DISTINCT d.Name), m.Name, g.price, nbd.price 
         FROM Manufacturer AS m
         JOIN NBDrugs AS nbd ON m.ManID = nbd.ManID
         JOIN Treatment AS t ON t.DrugID = nbd.DrugID
