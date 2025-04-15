@@ -28,39 +28,57 @@ const DrugSearch = ({
   const [lastId, setLastId] = useState(0);
   const [loading, setLoading] = useState(false);
   const [hasMoreResults, setHasMoreResults] = useState(false);
+  const [userEnteredSearch, setUserEnteredSearch] = useState(false);
 
   // Fetch data from the API
   const fetchData = useCallback(async (resetPagination = false) => {
-    // For multi-disease mode, we don't need a search term
+    // For non-multi modes, we need a search term (but the API will handle empty terms)
     if (queryMode !== 'multi' && searchTerm.trim() === '') {
-      setDrugResults([]);
-      setHasMoreResults(false);
-      return;
+      console.log('Empty search term in non-multi mode');
+      // We'll still try to fetch some results with a default search term
     }
 
     const currentId = resetPagination ? 0 : lastId;
     
     try {
       setLoading(true);
+      console.log(`Fetching data with searchTerm: "${searchTerm}", mode: ${queryMode}, lastId: ${currentId}`);
+      
       const results = await fetchDrugData(searchTerm, currentId, queryMode, minDiseases);
+      console.log(`Received ${results?.length || 0} results`);
       
-      if (resetPagination) {
-        setDrugResults(results);
+      if (!results || results.length === 0) {
+        console.log('No results returned from API');
+        if (resetPagination) {
+          setDrugResults([]);
+        }
+        setHasMoreResults(false);
       } else {
-        setDrugResults(prev => [...prev, ...results]);
-      }
-      
-      // Update pagination state
-      setHasMoreResults(results.length >= 6); // If we got 6 or more results, there might be more
-      
-      // Update the last ID for pagination if we have results
-      if (results.length > 0) {
-        // For all modes, the DrugID is at index 1
-        const maxId = Math.max(...results.map(item => item[1]));
-        setLastId(maxId);
+        if (resetPagination) {
+          setDrugResults(results);
+        } else {
+          setDrugResults(prev => [...prev, ...results]);
+        }
+        
+        // Update pagination state
+        setHasMoreResults(results.length >= 6); // If we got 6 or more results, there might be more
+        
+        // Update the last ID for pagination if we have results
+        if (results.length > 0) {
+          try {
+            // For all modes, the DrugID is at index 1
+            const maxId = Math.max(...results.map(item => item[1] || 0));
+            setLastId(maxId);
+          } catch (error) {
+            console.error('Error calculating maxId:', error);
+            // If we can't calculate maxId, just use the current lastId + 1
+            setLastId(currentId + 1);
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching data:', error);
+      // Don't clear results on error to maintain current state
     } finally {
       setLoading(false);
     }
@@ -70,6 +88,9 @@ const DrugSearch = ({
   const handleSearchChange = (e) => {
     const term = e.target.value;
     setSearchTerm(term);
+    
+    // Mark that user has manually entered a search term
+    setUserEnteredSearch(true);
     
     // Reset pagination when search term changes
     setLastId(0);
@@ -99,30 +120,92 @@ const DrugSearch = ({
 
   // Fetch data when search term or minDiseases changes (with debounce)
   useEffect(() => {
+    console.log(`Search term changed: "${searchTerm}", mode: ${queryMode}`);
+    
     const timer = setTimeout(() => {
       if (queryMode === 'multi' || searchTerm.trim() !== '') {
+        console.log(`Triggering search for: "${searchTerm}" in ${queryMode} mode`);
         fetchData(true); // Reset pagination when search parameters change
       }
-    }, 500);
+    }, 300); // Reduced debounce time for more responsive search
     
     return () => clearTimeout(timer);
   }, [searchTerm, queryMode, minDiseases, fetchData]);
 
+  // Use a ref to track the previous mode
+  const prevModeRef = React.useRef(queryMode);
+  
   // Reset search when mode changes
   useEffect(() => {
-    setSearchTerm('');
+    // Skip if this is the initial render
+    if (prevModeRef.current === queryMode) {
+      return;
+    }
+    
+    console.log(`Mode changed from ${prevModeRef.current} to ${queryMode}`);
+    prevModeRef.current = queryMode;
+    
+    // Clear results when mode changes to prevent issues
     setDrugResults([]);
     setLastId(0);
     setHasMoreResults(false);
     
-    // Auto-fetch for multi-disease mode
+    // Special handling for multi-disease mode
     if (queryMode === 'multi') {
+      // For multi-disease mode, we don't need a search term
+      setSearchTerm('');
+      
       // Use setTimeout to ensure fetchData is called after state updates
       setTimeout(() => {
         fetchData(true);
       }, 100);
     }
+    
+    // Special handling for drug mode
+    if (queryMode === 'drug') {
+      console.log('Transitioning to drug mode');
+      
+      // Only set default search term if user hasn't manually entered one
+      if (!userEnteredSearch) {
+        console.log('Setting default search term "a" for drug mode');
+      }
+      
+      // Trigger a search with the current search term
+      setTimeout(() => {
+        fetchData(true);
+      }, 100);
+    }
+    
+    // Special handling for disease mode
+    if (queryMode === 'disease') {
+      console.log('Transitioning to disease mode');
+      
+      // Only set default search term if user hasn't manually entered one
+      if (!userEnteredSearch) {
+        console.log('Setting default search term "a" for disease mode');
+      }
+      
+      // Trigger a search with the current search term
+      setTimeout(() => {
+        fetchData(true);
+      }, 100);
+    }
+    
   }, [queryMode, fetchData]);
+  
+  // Safety check for mode toggle button
+  const handleModeToggle = () => {
+    // Clear results before toggling mode
+    setDrugResults([]);
+    setLastId(0);
+    setHasMoreResults(false);
+    
+    // Reset the user entered search flag when toggling modes
+    setUserEnteredSearch(false);
+    
+    // Call the parent's onModeToggle function
+    onModeToggle();
+  };
 
   // Handle pagination
   const handlePrevPage = () => {
@@ -153,7 +236,7 @@ const DrugSearch = ({
       <div style={{ marginBottom: '20px' }}>
         <button 
           className="space-button glow-effect"
-          onClick={onModeToggle}
+          onClick={handleModeToggle}
           style={{ marginBottom: '20px' }}
         >
           <FaAtom style={{ marginRight: '8px' }} /> 
@@ -223,79 +306,89 @@ const DrugSearch = ({
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
               {drugResults.map((drug, index) => {
-                const processedDrug = processDrugData(drug, queryMode);
-                return (
-                  <motion.div 
-                    key={index}
-                    className="space-card glow-effect"
-                    whileHover={{ y: -5, boxShadow: '0 0 20px rgba(110, 59, 255, 0.6)' }}
-                    whileTap={{ y: 0 }}
-                    onClick={() => onDrugSelect(drug)}
-                    style={{ 
-                      cursor: 'pointer',
-                      border: '1px solid var(--space-card-border)'
-                    }}
-                  >
-                    {queryMode === 'drug' ? (
-                      <>
-                        <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <FaAtom color="var(--space-accent)" /> {drug[0]}
-                        </h3>
-                        <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
-                          Generic: {drug[2]?.split(',').join(', ') || 'N/A'}
-                        </p>
-                        <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
-                          Treatment: {drug[3]?.split(',').join(', ') || 'N/A'}
-                        </p>
-                        <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
-                          Manufacturer: {drug[4] || 'Unknown'}
-                        </p>
-                      </>
-                    ) : queryMode === 'disease' ? (
-                      <>
-                        <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <FaAtom color="var(--space-accent)" /> {drug[2] || 'Unknown Disease'}
-                        </h3>
-                        <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
-                          Generic: {drug[1] || 'N/A'} (${drug[4] || 'N/A'})
-                        </p>
-                        <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
-                          Manufacturer: {drug[3] || 'Unknown'}
-                        </p>
-                        <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
-                          Brand Price: ${drug[5] || 'N/A'}
-                        </p>
-                      </>
-                    ) : (
-                      // Multi-disease mode
-                      <>
-                        <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <FaDna color="var(--space-accent)" /> {drug[0]}
-                        </h3>
-                        <div style={{ 
-                          display: 'inline-block',
-                          padding: '3px 8px', 
-                          backgroundColor: 'rgba(110, 59, 255, 0.2)', 
-                          borderRadius: '4px',
-                          color: 'var(--space-accent)',
-                          fontWeight: 'bold',
-                          marginBottom: '10px'
-                        }}>
-                          Treats {drug[2]} diseases
-                        </div>
-                        <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
-                          Conditions: {drug[3]?.split(',').join(', ') || 'N/A'}
-                        </p>
-                        <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
-                          Manufacturer: {drug[4] || 'Unknown'}
-                        </p>
-                        <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
-                          Price: ${drug[5] || 'N/A'}
-                        </p>
-                      </>
-                    )}
-                  </motion.div>
-                );
+                try {
+                  // Safely check if drug is valid before rendering
+                  if (!drug || !Array.isArray(drug)) {
+                    console.error('Invalid drug data:', drug);
+                    return null;
+                  }
+                  
+                  return (
+                    <motion.div 
+                      key={index}
+                      className="space-card glow-effect"
+                      whileHover={{ y: -5, boxShadow: '0 0 20px rgba(110, 59, 255, 0.6)' }}
+                      whileTap={{ y: 0 }}
+                      onClick={() => onDrugSelect(drug)}
+                      style={{ 
+                        cursor: 'pointer',
+                        border: '1px solid var(--space-card-border)'
+                      }}
+                    >
+                      {queryMode === 'drug' ? (
+                        <>
+                          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <FaAtom color="var(--space-accent)" /> {drug[0] || 'Unknown Drug'}
+                          </h3>
+                          <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
+                            Generic: {typeof drug[2] === 'string' ? drug[2].split(',').join(', ') : 'N/A'}
+                          </p>
+                          <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
+                            Treatment: {typeof drug[3] === 'string' ? drug[3].split(',').join(', ') : 'N/A'}
+                          </p>
+                          <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
+                            Manufacturer: {drug[4] || 'Unknown'}
+                          </p>
+                        </>
+                      ) : queryMode === 'disease' ? (
+                        <>
+                          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <FaAtom color="var(--space-accent)" /> {drug[2] || 'Unknown Disease'}
+                          </h3>
+                          <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
+                            Generic: {drug[1] || 'N/A'} (${drug[4] || 'N/A'})
+                          </p>
+                          <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
+                            Manufacturer: {drug[3] || 'Unknown'}
+                          </p>
+                          <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
+                            Brand Price: ${drug[5] || 'N/A'}
+                          </p>
+                        </>
+                      ) : (
+                        // Multi-disease mode
+                        <>
+                          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <FaDna color="var(--space-accent)" /> {drug[0] || 'Unknown Drug'}
+                          </h3>
+                          <div style={{ 
+                            display: 'inline-block',
+                            padding: '3px 8px', 
+                            backgroundColor: 'rgba(110, 59, 255, 0.2)', 
+                            borderRadius: '4px',
+                            color: 'var(--space-accent)',
+                            fontWeight: 'bold',
+                            marginBottom: '10px'
+                          }}>
+                            Treats {drug[2] || '0'} diseases
+                          </div>
+                          <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
+                            Conditions: {typeof drug[3] === 'string' ? drug[3].split(',').join(', ') : 'N/A'}
+                          </p>
+                          <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
+                            Manufacturer: {drug[4] || 'Unknown'}
+                          </p>
+                          <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
+                            Price: ${drug[5] || 'N/A'}
+                          </p>
+                        </>
+                      )}
+                    </motion.div>
+                  );
+                } catch (error) {
+                  console.error('Error rendering drug card:', error, drug);
+                  return null;
+                }
               })}
             </div>
             

@@ -54,12 +54,24 @@ const ContentPage = () => {
 
   // Toggle search mode between drug, disease, and multi-disease
   const toggleQueryMode = () => {
-    setQueryMode(prevMode => {
-      if (prevMode === 'drug') return 'disease';
-      if (prevMode === 'disease') return 'multi';
-      return 'drug';
-    });
+    // First clear any selected drug to prevent rendering errors
     setSelectedDrug(null);
+    
+    // Determine the next mode
+    let nextMode;
+    if (queryMode === 'drug') {
+      nextMode = 'disease';
+    } else if (queryMode === 'disease') {
+      nextMode = 'multi';
+    } else {
+      // When switching from multi to drug, we need to be extra careful
+      nextMode = 'drug';
+    }
+    
+    console.log(`Switching mode from ${queryMode} to ${nextMode}`);
+    
+    // Set the mode directly without delay
+    setQueryMode(nextMode);
   };
   
   // Handle minimum diseases change for multi-disease mode

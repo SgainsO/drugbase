@@ -12,11 +12,28 @@ export const sampleSideEffects = [20, 18, 15, 14, 12, 10, 8];
  * @returns {Object} - Processed drug data
  */
 export const processDrugData = (drugData, queryMode) => {
+  // Default values in case data format doesn't match expectations
+  if (!drugData || !Array.isArray(drugData)) {
+    return {
+      id: 0,
+      name: 'Unknown Drug',
+      genericName: 'N/A',
+      treatment: ['N/A'],
+      manufacturer: 'Unknown',
+      price: 0,
+      genericPrice: 0,
+      effectiveness: sampleEffectiveness,
+      sideEffects: sampleSideEffects,
+      years: sampleYears,
+      description: 'No data available for this drug.'
+    };
+  }
+
   if (queryMode === 'drug') {
     // Format: [Name, DrugID, GenericNames, DiseaseNames, ManufacturerName, generic_price, brand_price]
     return {
-      id: drugData[1],
-      name: drugData[0],
+      id: drugData[1] || 0,
+      name: drugData[0] || 'Unknown Drug',
       genericName: drugData[2]?.split(',').join(', ') || 'N/A',
       treatment: drugData[3]?.split(',') || ['N/A'],
       manufacturer: drugData[4] || 'Unknown',
@@ -30,8 +47,8 @@ export const processDrugData = (drugData, queryMode) => {
   } else if (queryMode === 'disease') {
     // Format: [DiseaseID, GenericName, DiseaseName, ManufacturerName, GenericPrice, BrandPrice]
     return {
-      id: drugData[0],
-      name: `Treatment for ${drugData[2]}`,
+      id: drugData[0] || 0,
+      name: `Treatment for ${drugData[2] || 'Unknown Disease'}`,
       genericName: drugData[1] || 'N/A',
       treatment: [drugData[2] || 'N/A'],
       manufacturer: drugData[3] || 'Unknown',
@@ -40,7 +57,7 @@ export const processDrugData = (drugData, queryMode) => {
       effectiveness: sampleEffectiveness,
       sideEffects: sampleSideEffects,
       years: sampleYears,
-      description: `A treatment for ${drugData[2]}.`
+      description: `A treatment for ${drugData[2] || 'Unknown Disease'}.`
     };
   } else if (queryMode === 'multi') {
     // Format: [Name, DrugID, DiseaseCount, DiseaseNames, ManufacturerName, price]
@@ -48,13 +65,13 @@ export const processDrugData = (drugData, queryMode) => {
     const diseaseNames = drugData[3]?.split(',') || ['Unknown'];
     
     return {
-      id: drugData[1],
-      name: drugData[0],
+      id: drugData[1] || 0,
+      name: drugData[0] || 'Unknown Drug',
       genericName: 'Multiple Generics',
       treatment: diseaseNames,
       manufacturer: drugData[4] || 'Unknown',
       price: drugData[5] || 0,
-      genericPrice: Math.floor(drugData[5] * 0.6) || 0, // Estimate generic price as 60% of brand price
+      genericPrice: Math.floor((drugData[5] || 0) * 0.6), // Estimate generic price as 60% of brand price
       effectiveness: sampleEffectiveness,
       sideEffects: sampleSideEffects,
       years: sampleYears,
@@ -62,6 +79,21 @@ export const processDrugData = (drugData, queryMode) => {
       description: `A broad-spectrum pharmaceutical drug that treats ${diseaseCount} different conditions.`
     };
   }
+  
+  // Default fallback if queryMode is not recognized
+  return {
+    id: drugData[1] || 0,
+    name: drugData[0] || 'Unknown Drug',
+    genericName: 'N/A',
+    treatment: ['N/A'],
+    manufacturer: 'Unknown',
+    price: 0,
+    genericPrice: 0,
+    effectiveness: sampleEffectiveness,
+    sideEffects: sampleSideEffects,
+    years: sampleYears,
+    description: 'No data available for this drug.'
+  };
 };
 
 /**

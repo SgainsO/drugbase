@@ -28,30 +28,25 @@ class database:
         return results
     def Drug_Search_Mode_six(self, num, filter):
         cur = self.db.cursor() 
-        lenOfFilter = len(filter)
         cur.execute("""
-        SELECT nbd.Name, nbd.DrugID, GROUP_CONCAT(DISTINCT g.Name), GROUP_CONCAT(DISTINCT d.Name), m.Name, g.price, nbd.price 
+        SELECT nbd.Name, nbd.DrugID, g.Name,
+                     GROUP_CONCAT(DISTINCT d.Name),
+                     m.Name, g.price, nbd.price 
         FROM Manufacturer AS m
         JOIN NBDrugs AS nbd ON m.ManID = nbd.ManID
         JOIN Treatment AS t ON t.DrugID = nbd.DrugID
         JOIN Generics AS g ON t.GenID = g.GenID
         JOIN Disease AS d ON d.DiseaseID = t.DiseaseID
-        WHERE nbd.DrugID IN (
-            SELECT DrugID 
-            FROM NBDrugs 
-            WHERE substr(Name, 1, ?) = ? AND DrugID > ?
-        )
+        WHERE substr(nbd.Name, 1, ?) = ? AND nbd.DrugID > ?
         GROUP BY nbd.DrugID, g.Name, m.Name
-        HAVING COUNT(DISTINCT g.GenID) > 0
         ORDER BY nbd.DrugID ASC
-        LIMIT 8""",  (lenOfFilter, filter, num))
+        LIMIT 8""",  (len(filter), filter, num))
         results = cur.fetchall()
         
         cur.close()
         return results
     def Disease_Search_Mode_six(self, num, filter):
         cur = self.db.cursor() 
-        lenOfFilter = len(filter)
         cur.execute("""SELECT d.DiseaseID, g.Name, d.Name, m.Name, g.price, nbd.price 
                     FROM Manufacturer AS m
                     JOIN NBDrugs AS nbd ON m.ManID = nbd.ManID
@@ -60,7 +55,7 @@ class database:
                     JOIN Disease AS d ON d.DiseaseID = t.DiseaseID
                     WHERE substr(d.Name, 1, ?) = ? AND nbd.DrugID > ?
                     ORDER BY nbd.DrugID ASC
-                    LIMIT 8""", (lenOfFilter, filter, num))
+                    LIMIT 8""", (len(filter), filter, num))
         results = cur.fetchall()
         cur.close()
         return results

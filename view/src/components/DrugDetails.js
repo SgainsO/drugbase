@@ -17,7 +17,7 @@ const DrugDetails = ({ selectedDrug }) => {
   const [isLoading, setIsLoading] = useState(true);
   const graphRef = useRef(null);
   
-  // Determine if this is a multi-disease drug
+  // Safely determine if this is a multi-disease drug
   const isMultiDiseaseDrug = selectedDrug && selectedDrug.diseaseCount !== undefined;
   
   // Simulate loading effect when drug changes
@@ -88,7 +88,8 @@ const DrugDetails = ({ selectedDrug }) => {
     }, 100);
   }, [selectedDrug]);
 
-  if (!selectedDrug) {
+  // Safety check - if no selected drug or invalid data, don't render anything
+  if (!selectedDrug || typeof selectedDrug !== 'object') {
     return null;
   }
 
