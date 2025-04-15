@@ -26,6 +26,15 @@ async def get_next_six_drugs(IDFrom: int, QueryName: str):
     return {"data" : client.Drug_Search_Mode_six(IDFrom, QueryName)}
     #Remember this will contain the greated id
     #In case user wants to see next without changing the name
+    
 @app.get("/Disease_Search/{IDFrom}/{QueryName}")
 async def get_next_six_disease(IDFrom: int, QueryName: str):
     return {"data" : client.Disease_Search_Mode_six(IDFrom, QueryName)}
+
+@app.get("/Multi_Disease_Treatment/{IDFrom}/{MinDiseases}")
+async def get_multi_disease_treatments(IDFrom: int, MinDiseases: int = 2):
+    """
+    Get drugs that treat multiple diseases
+    Uses HAVING clause to filter drugs that treat at least MinDiseases different diseases
+    """
+    return {"data": client.Multi_Disease_Treatment_Search(IDFrom, MinDiseases)}

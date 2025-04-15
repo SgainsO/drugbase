@@ -8,27 +8,26 @@ export const sampleSideEffects = [20, 18, 15, 14, 12, 10, 8];
 /**
  * Process drug data for display
  * @param {Array} drugData - Raw drug data from the API
- * @param {string} queryMode - The search mode ('drug' or 'disease')
+ * @param {string} queryMode - The search mode ('drug', 'disease', or 'multi')
  * @returns {Object} - Processed drug data
  */
 export const processDrugData = (drugData, queryMode) => {
   if (queryMode === 'drug') {
-    // Format: [Name, DrugID, GenericNames, DiseaseNames, ManufacturerName]
+    // Format: [Name, DrugID, GenericNames, DiseaseNames, ManufacturerName, generic_price, brand_price]
     return {
       id: drugData[1],
       name: drugData[0],
       genericName: drugData[2]?.split(',').join(', ') || 'N/A',
       treatment: drugData[3]?.split(',') || ['N/A'],
       manufacturer: drugData[4] || 'Unknown',
-      // Sample data for visualization
-      price: 299.99,
-      genericPrice: 149.99,
+      price: drugData[6] || 0,
+      genericPrice: drugData[5] || 0,
       effectiveness: sampleEffectiveness,
       sideEffects: sampleSideEffects,
       years: sampleYears,
       description: `A pharmaceutical drug used to treat various conditions.`
     };
-  } else {
+  } else if (queryMode === 'disease') {
     // Format: [DiseaseID, GenericName, DiseaseName, ManufacturerName, GenericPrice, BrandPrice]
     return {
       id: drugData[0],
@@ -42,6 +41,25 @@ export const processDrugData = (drugData, queryMode) => {
       sideEffects: sampleSideEffects,
       years: sampleYears,
       description: `A treatment for ${drugData[2]}.`
+    };
+  } else if (queryMode === 'multi') {
+    // Format: [Name, DrugID, DiseaseCount, DiseaseNames, ManufacturerName, price]
+    const diseaseCount = drugData[2] || 0;
+    const diseaseNames = drugData[3]?.split(',') || ['Unknown'];
+    
+    return {
+      id: drugData[1],
+      name: drugData[0],
+      genericName: 'Multiple Generics',
+      treatment: diseaseNames,
+      manufacturer: drugData[4] || 'Unknown',
+      price: drugData[5] || 0,
+      genericPrice: Math.floor(drugData[5] * 0.6) || 0, // Estimate generic price as 60% of brand price
+      effectiveness: sampleEffectiveness,
+      sideEffects: sampleSideEffects,
+      years: sampleYears,
+      diseaseCount: diseaseCount,
+      description: `A broad-spectrum pharmaceutical drug that treats ${diseaseCount} different conditions.`
     };
   }
 };

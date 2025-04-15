@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaAtom, FaChartLine } from 'react-icons/fa';
+import { FaAtom, FaChartLine, FaDna } from 'react-icons/fa';
 import { Bar } from 'react-chartjs-2';
 import HeartAttackGraph from './HeartAttackGraph';
 import SpaceLoader from './SpaceLoader';
@@ -16,6 +16,9 @@ const DrugDetails = ({ selectedDrug }) => {
   const [showGraph, setShowGraph] = React.useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const graphRef = useRef(null);
+  
+  // Determine if this is a multi-disease drug
+  const isMultiDiseaseDrug = selectedDrug && selectedDrug.diseaseCount !== undefined;
   
   // Simulate loading effect when drug changes
   useEffect(() => {
@@ -103,6 +106,24 @@ const DrugDetails = ({ selectedDrug }) => {
         </h2>
         
         <div className="drug-details" style={{ marginBottom: '30px' }}>
+          {isMultiDiseaseDrug && (
+            <div style={{ 
+              padding: '15px', 
+              backgroundColor: 'rgba(110, 59, 255, 0.1)', 
+              borderRadius: '8px',
+              marginBottom: '20px',
+              borderLeft: '4px solid var(--space-accent)'
+            }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                <FaDna color="var(--space-accent)" /> Broad-Spectrum Medication
+              </h3>
+              <p style={{ marginBottom: '10px' }}>
+                This medication is effective against <strong>{selectedDrug.diseaseCount}</strong> different conditions, 
+                making it a versatile treatment option.
+              </p>
+            </div>
+          )}
+          
           <p><strong>Generic Name:</strong> {selectedDrug.genericName}</p>
           <p><strong>Manufacturer:</strong> {selectedDrug.manufacturer}</p>
           <p><strong>Treatment for:</strong> {Array.isArray(selectedDrug.treatment) ? selectedDrug.treatment.join(', ') : selectedDrug.treatment}</p>

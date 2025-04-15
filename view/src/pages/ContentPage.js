@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaRocket, FaArrowLeft } from 'react-icons/fa';
+import { FaRocket, FaArrowLeft, FaDna } from 'react-icons/fa';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 import DrugSearch from '../components/DrugSearch';
 import DrugDetails from '../components/DrugDetails';
@@ -26,7 +26,8 @@ ChartJS.register(
  */
 const ContentPage = () => {
   const [selectedDrug, setSelectedDrug] = useState(null);
-  const [queryMode, setQueryMode] = useState('drug'); // 'drug' or 'disease'
+  const [queryMode, setQueryMode] = useState('drug'); // 'drug', 'disease', or 'multi'
+  const [minDiseases, setMinDiseases] = useState(2); // Minimum number of diseases for multi-disease mode
   const starsRef = useRef(null);
 
   // Create stars in the background
@@ -51,9 +52,19 @@ const ContentPage = () => {
     }
   }, []);
 
-  // Toggle search mode between drug and disease
+  // Toggle search mode between drug, disease, and multi-disease
   const toggleQueryMode = () => {
-    setQueryMode(prevMode => prevMode === 'drug' ? 'disease' : 'drug');
+    setQueryMode(prevMode => {
+      if (prevMode === 'drug') return 'disease';
+      if (prevMode === 'disease') return 'multi';
+      return 'drug';
+    });
+    setSelectedDrug(null);
+  };
+  
+  // Handle minimum diseases change for multi-disease mode
+  const handleMinDiseasesChange = (value) => {
+    setMinDiseases(value);
     setSelectedDrug(null);
   };
 
@@ -100,8 +111,10 @@ const ContentPage = () => {
           {/* Drug Search Component */}
           <DrugSearch 
             queryMode={queryMode}
+            minDiseases={minDiseases}
             onDrugSelect={handleDrugSelect}
             onModeToggle={toggleQueryMode}
+            onMinDiseasesChange={handleMinDiseasesChange}
           />
 
           {/* Drug Details Component */}

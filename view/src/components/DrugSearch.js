@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { FaSearch, FaAtom } from 'react-icons/fa';
+import { FaSearch, FaAtom, FaDna, FaPlus, FaMinus } from 'react-icons/fa';
 import PaginationControls from './PaginationControls';
 import SpaceLoader from './SpaceLoader';
 import { fetchDrugData } from '../utils/api';
@@ -9,12 +9,20 @@ import { processDrugData } from '../utils/dataProcessing';
 /**
  * Drug search component
  * @param {Object} props - Component props
- * @param {string} props.queryMode - The search mode ('drug' or 'disease')
+ * @param {string} props.queryMode - The search mode ('drug', 'disease', or 'multi')
+ * @param {number} props.minDiseases - Minimum number of diseases for multi-disease mode
  * @param {Function} props.onDrugSelect - Function to handle drug selection
  * @param {Function} props.onModeToggle - Function to handle mode toggle
+ * @param {Function} props.onMinDiseasesChange - Function to handle minimum diseases change
  * @returns {JSX.Element} - Rendered component
  */
-const DrugSearch = ({ queryMode, onDrugSelect, onModeToggle }) => {
+const DrugSearch = ({ 
+  queryMode, 
+  minDiseases = 2, 
+  onDrugSelect, 
+  onModeToggle, 
+  onMinDiseasesChange 
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [drugResults, setDrugResults] = useState([]);
   const [lastId, setLastId] = useState(0);
@@ -23,7 +31,8 @@ const DrugSearch = ({ queryMode, onDrugSelect, onModeToggle }) => {
 
   // Fetch data from the API
   const fetchData = useCallback(async (resetPagination = false) => {
-    if (searchTerm.trim() === '') {
+    // For multi-disease mode, we don't need a search term
+    if (queryMode !== 'multi' && searchTerm.trim() === '') {
       setDrugResults([]);
       setHasMoreResults(false);
       return;
@@ -33,7 +42,7 @@ const DrugSearch = ({ queryMode, onDrugSelect, onModeToggle }) => {
     
     try {
       setLoading(true);
-      const results = await fetchDrugData(searchTerm, currentId, queryMode);
+      const results = await fetchDrugData(searchTerm, currentId, queryMode, minDiseases);
       
       if (resetPagination) {
         setDrugResults(results);
@@ -42,27 +51,20 @@ const DrugSearch = ({ queryMode, onDrugSelect, onModeToggle }) => {
       }
       
       // Update pagination state
-      setHasMoreResults(results.length === 6); // If we got 6 results, there might be more
+      setHasMoreResults(results.length >= 6); // If we got 6 or more results, there might be more
       
       // Update the last ID for pagination if we have results
       if (results.length > 0) {
-        // For drug mode, the DrugID is at index 1
-        // For disease mode, we need to find the max DrugID
-        if (queryMode === 'drug') {
-          const maxId = Math.max(...results.map(item => item[1]));
-          setLastId(maxId);
-        } else {
-          // For disease mode, we need to find the max DrugID which isn't directly available
-          // We'll use the last item's ID as the next starting point
-          setLastId(results[results.length - 1][0]);
-        }
+        // For all modes, the DrugID is at index 1
+        const maxId = Math.max(...results.map(item => item[1]));
+        setLastId(maxId);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, queryMode, lastId]);
+  }, [searchTerm, queryMode, lastId, minDiseases]);
 
   // Handle search input change
   const handleSearchChange = (e) => {
@@ -72,22 +74,39 @@ const DrugSearch = ({ queryMode, onDrugSelect, onModeToggle }) => {
     // Reset pagination when search term changes
     setLastId(0);
     
-    if (term.trim() === '') {
+    if (term.trim() === '' && queryMode !== 'multi') {
       setDrugResults([]);
       setHasMoreResults(false);
     }
   };
 
-  // Fetch data when search term changes (with debounce)
+  // Handle minimum diseases change
+  const handleMinDiseasesChange = (change) => {
+    const newValue = Math.max(1, minDiseases + change);
+    onMinDiseasesChange(newValue);
+    
+    // Reset search results and trigger a new search with the updated minDiseases value
+    if (queryMode === 'multi') {
+      setLastId(0);
+      setDrugResults([]);
+      
+      // Use setTimeout to ensure the minDiseases state is updated before fetching
+      setTimeout(() => {
+        fetchData(true);
+      }, 100);
+    }
+  };
+
+  // Fetch data when search term or minDiseases changes (with debounce)
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (searchTerm.trim() !== '') {
-        fetchData(true); // Reset pagination when search term changes
+      if (queryMode === 'multi' || searchTerm.trim() !== '') {
+        fetchData(true); // Reset pagination when search parameters change
       }
     }, 500);
     
     return () => clearTimeout(timer);
-  }, [searchTerm, queryMode, fetchData]);
+  }, [searchTerm, queryMode, minDiseases, fetchData]);
 
   // Reset search when mode changes
   useEffect(() => {
@@ -95,7 +114,15 @@ const DrugSearch = ({ queryMode, onDrugSelect, onModeToggle }) => {
     setDrugResults([]);
     setLastId(0);
     setHasMoreResults(false);
-  }, [queryMode]);
+    
+    // Auto-fetch for multi-disease mode
+    if (queryMode === 'multi') {
+      // Use setTimeout to ensure fetchData is called after state updates
+      setTimeout(() => {
+        fetchData(true);
+      }, 100);
+    }
+  }, [queryMode, fetchData]);
 
   // Handle pagination
   const handlePrevPage = () => {
@@ -109,6 +136,16 @@ const DrugSearch = ({ queryMode, onDrugSelect, onModeToggle }) => {
     fetchData(false); // Fetch next page without resetting
   };
 
+  // Get the current mode display text
+  const getModeDisplayText = () => {
+    switch (queryMode) {
+      case 'drug': return 'Drug Search';
+      case 'disease': return 'Disease Search';
+      case 'multi': return 'Multi-Disease Treatment Search';
+      default: return 'Drug Search';
+    }
+  };
+
   return (
     <div className="search-section space-card" style={{ marginBottom: '40px', padding: '30px' }}>
       <h2 style={{ marginBottom: '20px' }}>Query The Database</h2>
@@ -120,23 +157,65 @@ const DrugSearch = ({ queryMode, onDrugSelect, onModeToggle }) => {
           style={{ marginBottom: '20px' }}
         >
           <FaAtom style={{ marginRight: '8px' }} /> 
-          Current Mode: {queryMode === 'drug' ? 'Drug Search' : 'Disease Search'}
+          Current Mode: {getModeDisplayText()}
         </button>
+        
+        {/* Min Diseases Control for Multi-Disease Mode */}
+        {queryMode === 'multi' && (
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            marginTop: '15px',
+            padding: '10px',
+            backgroundColor: 'rgba(110, 59, 255, 0.1)',
+            borderRadius: '8px'
+          }}>
+            <FaDna style={{ marginRight: '10px', color: 'var(--space-accent)' }} />
+            <span style={{ marginRight: '15px' }}>Minimum Diseases:</span>
+            <button 
+              className="space-button"
+              onClick={() => handleMinDiseasesChange(-1)}
+              disabled={minDiseases <= 1}
+              style={{ padding: '5px 10px', marginRight: '10px' }}
+            >
+              <FaMinus />
+            </button>
+            <span style={{ 
+              padding: '5px 15px', 
+              backgroundColor: 'rgba(110, 59, 255, 0.2)', 
+              borderRadius: '4px',
+              color: 'var(--space-accent)',
+              fontWeight: 'bold'
+            }}>
+              {minDiseases}
+            </span>
+            <button 
+              className="space-button"
+              onClick={() => handleMinDiseasesChange(1)}
+              style={{ padding: '5px 10px', marginLeft: '10px' }}
+            >
+              <FaPlus />
+            </button>
+          </div>
+        )}
       </div>
       
-      <div className="search-input-container" style={{ position: 'relative' }}>
-        <FaSearch style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--space-text-secondary)' }} />
-        <input 
-          type="text" 
-          className="space-input" 
-          placeholder={queryMode === 'drug' ? 
-            "Search by drug name, generic name, or category..." : 
-            "Search by disease or condition..."}
-          value={searchTerm}
-          onChange={handleSearchChange}
-          style={{ paddingLeft: '45px' }}
-        />
-      </div>
+      {/* Search Input (hidden for multi-disease mode) */}
+      {queryMode !== 'multi' && (
+        <div className="search-input-container" style={{ position: 'relative' }}>
+          <FaSearch style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--space-text-secondary)' }} />
+          <input 
+            type="text" 
+            className="space-input" 
+            placeholder={queryMode === 'drug' ? 
+              "Search by drug name, generic name, or category..." : 
+              "Search by disease or condition..."}
+            value={searchTerm}
+            onChange={handleSearchChange}
+            style={{ paddingLeft: '45px' }}
+          />
+        </div>
+      )}
       
             <div className="search-results" style={{ marginTop: '20px' }}>
               <SpaceLoader isLoading={loading}>
@@ -172,7 +251,7 @@ const DrugSearch = ({ queryMode, onDrugSelect, onModeToggle }) => {
                           Manufacturer: {drug[4] || 'Unknown'}
                         </p>
                       </>
-                    ) : (
+                    ) : queryMode === 'disease' ? (
                       <>
                         <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <FaAtom color="var(--space-accent)" /> {drug[2] || 'Unknown Disease'}
@@ -185,6 +264,33 @@ const DrugSearch = ({ queryMode, onDrugSelect, onModeToggle }) => {
                         </p>
                         <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
                           Brand Price: ${drug[5] || 'N/A'}
+                        </p>
+                      </>
+                    ) : (
+                      // Multi-disease mode
+                      <>
+                        <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <FaDna color="var(--space-accent)" /> {drug[0]}
+                        </h3>
+                        <div style={{ 
+                          display: 'inline-block',
+                          padding: '3px 8px', 
+                          backgroundColor: 'rgba(110, 59, 255, 0.2)', 
+                          borderRadius: '4px',
+                          color: 'var(--space-accent)',
+                          fontWeight: 'bold',
+                          marginBottom: '10px'
+                        }}>
+                          Treats {drug[2]} diseases
+                        </div>
+                        <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
+                          Conditions: {drug[3]?.split(',').join(', ') || 'N/A'}
+                        </p>
+                        <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
+                          Manufacturer: {drug[4] || 'Unknown'}
+                        </p>
+                        <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
+                          Price: ${drug[5] || 'N/A'}
                         </p>
                       </>
                     )}
@@ -201,6 +307,10 @@ const DrugSearch = ({ queryMode, onDrugSelect, onModeToggle }) => {
               hasNextPage={hasMoreResults}
             />
           </>
+                ) : queryMode === 'multi' ? (
+          <div className="space-card" style={{ textAlign: 'center', padding: '30px' }}>
+            <p>No multi-disease treatments found. Try adjusting the minimum diseases threshold.</p>
+          </div>
                 ) : searchTerm.trim() !== '' ? (
           <div className="space-card" style={{ textAlign: 'center', padding: '30px' }}>
             <p>No drugs found in this sector of the galaxy. Try a different search term.</p>
