@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { FaSearch, FaAtom, FaDna, FaPlus, FaMinus } from 'react-icons/fa';
 import PaginationControls from './PaginationControls';
@@ -26,19 +26,21 @@ const DrugSearch = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [drugResults, setDrugResults] = useState([]);
   const [lastId, setLastId] = useState(0);
+  const [paginationHistory, setPaginationHistory] = useState([0]); // Track pagination history
   const [loading, setLoading] = useState(false);
   const [hasMoreResults, setHasMoreResults] = useState(false);
   const [userEnteredSearch, setUserEnteredSearch] = useState(false);
 
-  // Fetch data from the API
-  const fetchData = useCallback(async (resetPagination = false) => {
+  // Fetch data from the API - remove lastId from dependencies to prevent re-fetching
+  const fetchData = useCallback(async (resetPagination = false, manualLastId = null) => {
     // For non-multi modes, we need a search term (but the API will handle empty terms)
     if (queryMode !== 'multi' && searchTerm.trim() === '') {
       console.log('Empty search term in non-multi mode');
       // We'll still try to fetch some results with a default search term
     }
 
-    const currentId = resetPagination ? 0 : lastId;
+    // Use the manually provided lastId if available, otherwise use state
+    const currentId = resetPagination ? 0 : (manualLastId !== null ? manualLastId : lastId);
     
     try {
       setLoading(true);
@@ -54,23 +56,38 @@ const DrugSearch = ({
         }
         setHasMoreResults(false);
       } else {
-        if (resetPagination) {
-          setDrugResults(results);
-        } else {
-          setDrugResults(prev => [...prev, ...results]);
-        }
+        // Always set results directly, don't append
+        setDrugResults(results);
         
         // Update pagination state
         setHasMoreResults(results.length >= 6); // If we got 6 or more results, there might be more
         
-        // Update the last ID for pagination if we have results
+        // Always update lastId with the maximum ID from the results
         if (results.length > 0) {
           try {
-            // For all modes, the DrugID is at index 1
-            const maxId = Math.max(...results.map(item => item[1] || 0));
+            // Get the correct index for the ID based on the mode
+            const idIndex = queryMode === 'disease' ? 0 : 1;
+            
+            // Find the maximum ID in the results
+            const maxId = Math.max(...results.map(item => {
+              // Ensure we have a valid number
+              const id = Number(item[idIndex]);
+              return isNaN(id) ? 0 : id;
+            }));
+            
+            console.log(`Setting lastId to ${maxId} (from index ${idIndex})`);
+            
+            // If this is a reset or initial load, reset the pagination history
+            if (resetPagination) {
+              setPaginationHistory([0, maxId]);
+            } else {
+              // Otherwise, add to the history
+              setPaginationHistory(prev => [...prev, maxId]);
+            }
+            
             setLastId(maxId);
           } catch (error) {
-            console.error('Error calculating maxId:', error);
+            console.error('Error calculating maxId:', error, results);
             // If we can't calculate maxId, just use the current lastId + 1
             setLastId(currentId + 1);
           }
@@ -82,7 +99,8 @@ const DrugSearch = ({
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, queryMode, lastId, minDiseases]);
+  // Remove lastId from dependencies to prevent re-fetching when it changes
+  }, [searchTerm, queryMode, minDiseases]);
 
   // Handle search input change
   const handleSearchChange = (e) => {
@@ -94,6 +112,7 @@ const DrugSearch = ({
     
     // Reset pagination when search term changes
     setLastId(0);
+    setPaginationHistory([0]); // Reset pagination history
     
     if (term.trim() === '' && queryMode !== 'multi') {
       setDrugResults([]);
@@ -109,6 +128,7 @@ const DrugSearch = ({
     // Reset search results and trigger a new search with the updated minDiseases value
     if (queryMode === 'multi') {
       setLastId(0);
+      setPaginationHistory([0]); // Reset pagination history
       setDrugResults([]);
       
       // Use setTimeout to ensure the minDiseases state is updated before fetching
@@ -119,7 +139,16 @@ const DrugSearch = ({
   };
 
   // Fetch data when search term or minDiseases changes (with debounce)
+  // Use a ref to track if this is an initial load to prevent double fetching
+  const initialLoadRef = useRef(true);
+  
   useEffect(() => {
+    // Skip the initial render to prevent double fetching
+    if (initialLoadRef.current) {
+      initialLoadRef.current = false;
+      return;
+    }
+    
     console.log(`Search term changed: "${searchTerm}", mode: ${queryMode}`);
     
     const timer = setTimeout(() => {
@@ -148,6 +177,7 @@ const DrugSearch = ({
     // Clear results when mode changes to prevent issues
     setDrugResults([]);
     setLastId(0);
+    setPaginationHistory([0]); // Reset pagination history
     setHasMoreResults(false);
     
     // Special handling for multi-disease mode
@@ -198,6 +228,7 @@ const DrugSearch = ({
     // Clear results before toggling mode
     setDrugResults([]);
     setLastId(0);
+    setPaginationHistory([0]); // Reset pagination history
     setHasMoreResults(false);
     
     // Reset the user entered search flag when toggling modes
@@ -207,16 +238,100 @@ const DrugSearch = ({
     onModeToggle();
   };
 
-  // Handle pagination
+  // Handle pagination - use direct API calls instead of fetchData to avoid state issues
   const handlePrevPage = () => {
-    // For previous page, we need to reset and fetch with a lower ID
-    // This is a simplified approach - in a real app, you might want to keep track of page history
-    setLastId(Math.max(0, lastId - 12)); // Go back approximately 2 pages (12 items)
-    fetchData(true);
+    // If we have a pagination history, use it to go back
+    if (paginationHistory.length > 1) {
+      // Remove the current ID from history
+      const newHistory = [...paginationHistory];
+      newHistory.pop();
+      
+      // Get the previous ID from history
+      const prevId = newHistory[newHistory.length - 1];
+      
+      console.log(`Going back to previous page with ID: ${prevId}`);
+      
+      // Clear current results and show loading
+      setDrugResults([]);
+      setLoading(true);
+      
+      // Make a direct API call to avoid state update issues
+      fetchDrugData(searchTerm, prevId, queryMode, minDiseases)
+        .then(results => {
+          console.log(`Prev page received ${results?.length || 0} results`);
+          
+          if (!results || results.length === 0) {
+            setHasMoreResults(false);
+          } else {
+            setDrugResults(results);
+            setHasMoreResults(results.length >= 6);
+            
+            // Update the lastId to the previous ID
+            setLastId(prevId);
+            
+            // Update pagination history
+            setPaginationHistory(newHistory);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching prev page:', error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      console.log('No previous page available');
+    }
   };
 
   const handleNextPage = () => {
-    fetchData(false); // Fetch next page without resetting
+    // Clear current results and show loading
+    setDrugResults([]);
+    setLoading(true);
+    
+    // Make a direct API call to avoid state update issues
+    fetchDrugData(searchTerm, lastId, queryMode, minDiseases)
+      .then(results => {
+        console.log(`Next page received ${results?.length || 0} results`);
+        
+        if (!results || results.length === 0) {
+          setHasMoreResults(false);
+        } else {
+          setDrugResults(results);
+          setHasMoreResults(results.length >= 6);
+          
+          // Update lastId with the maximum ID from the results
+          if (results.length > 0) {
+            try {
+              const idIndex = queryMode === 'disease' ? 0 : 1;
+              const maxId = Math.max(...results.map(item => {
+                const id = Number(item[idIndex]);
+                return isNaN(id) ? 0 : id;
+              }));
+              console.log(`Next page setting lastId to ${maxId}`);
+              
+              // Add the current lastId to the pagination history before updating it
+              setPaginationHistory(prev => [...prev, maxId]);
+              
+              // Update the lastId
+              setLastId(maxId);
+            } catch (error) {
+              console.error('Error calculating maxId:', error);
+              
+              // If we can't calculate maxId, just use the current lastId + 1
+              const newId = lastId + 1;
+              setPaginationHistory(prev => [...prev, newId]);
+              setLastId(newId);
+            }
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching next page:', error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   // Get the current mode display text
@@ -396,7 +511,7 @@ const DrugSearch = ({
             <PaginationControls 
               onPrevPage={handlePrevPage}
               onNextPage={handleNextPage}
-              hasPrevPage={lastId > 0}
+              hasPrevPage={paginationHistory.length > 1} // Only enable prev button if we have history
               hasNextPage={hasMoreResults}
             />
           </>

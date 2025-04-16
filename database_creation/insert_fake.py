@@ -1,11 +1,11 @@
 import sqlite3
 import random
 
-# Connect to database (creates if it doesn't exist)
+# Connect to database
 conn = sqlite3.connect("fake.db")
 cursor = conn.cursor()
 
-# Clean start: drop tables if they exist
+# Reset tables
 cursor.executescript("""
 DROP TABLE IF EXISTS Manufacturer;
 DROP TABLE IF EXISTS NBDrugs;
@@ -27,9 +27,26 @@ manufacturers = ["PharmaCorp", "MediLife", "HealWell", "BioGen", "CureTech"]
 purposes = ["Pain Relief", "Antibiotic", "Anti-inflammatory", "Antiviral", "Blood Pressure"]
 diseases = ["Flu", "Cold", "Arthritis", "Hypertension", "Infection", "COVID-19"]
 
-# Realistic drug name generators
-prefixes = ["Acu", "Ben", "Cetra", "Dolo", "Exo", "Flora", "Geno", "Hema", "Immu", "Juvo"]
-suffixes = ["dol", "vir", "mune", "cillin", "pril", "zol", "pan", "nex", "rel", "med"]
+prefixes = [
+    "Acu", "Ben", "Cetra", "Dolo", "Exo", "Flora", "Geno", "Hema", "Immu", "Juvo",
+    "Ketra", "Luma", "Myco", "Neuro", "Ortho", "Pedi", "Quanta", "Rena", "Sero", "Thera",
+    "Ultra", "Vira", "Well", "Xeno", "Yura", "Zeno", "Allo", "Bio", "Cardi", "Derm",
+    "Endo", "Ferro", "Gluco", "Hydro", "Intra", "Janu", "Kali", "Lacto", "Meta", "Natu",
+    "Oxi", "Pura", "Qira", "Reju", "Syno", "Tera", "Uro", "Veno", "Welo", "Xilo", "Zyto",
+    "Aero", "Bacto", "Cryo", "Dia", "Ecto", "Fito", "Gyne", "Halo", "Iso", "Juvo",
+    "Karyo", "Lipo", "Micro", "Neo", "Osteo", "Pharma", "Quixo", "Ribo", "Seri", "Tricho",
+    "Uvia", "Vaxo", "Xantho", "Yello", "Zymo", "Ambi", "Brio", "Cysto", "Delto", "Ergo",
+    "Flexo", "Gastro", "Hepato", "Ion", "Jecto", "Kemo", "Lyso", "Medi", "Nexo", "Omni"
+]
+
+suffixes = [
+    "dol", "vir", "mune", "cillin", "pril", "zol", "pan", "nex", "rel", "med",
+    "fen", "line", "done", "xone", "mycin", "thrin", "zine", "zole", "tide", "dopa",
+    "pram", "xan", "barb", "mab", "stat", "mide", "prazole", "caine", "sartan", "dine",
+    "one", "cort", "lone", "dazole", "phene", "terol", "tadine", "lukast", "mivir", "virin",
+    "triptan", "gliptin", "afil", "asone", "setron", "ximab", "zumab", "tuzumab", "rubicin", "cid"
+]
+
 
 def generate_drug_name(existing_names):
     while True:
@@ -46,38 +63,34 @@ for i, name in enumerate(manufacturers, start=1):
 for i, disease in enumerate(diseases, start=1):
     cursor.execute("INSERT INTO Disease VALUES (?, ?)", (i, disease))
 
-# Insert brand-name drugs
+# Insert NBDrugs
 used_drug_names = set()
-for drug_id in range(1, 21):
+for drug_id in range(1, 200):
     name = generate_drug_name(used_drug_names)
     price = random.randint(20, 100)
     purpose = random.choice(purposes)
     man_id = random.randint(1, len(manufacturers))
     cursor.execute("INSERT INTO NBDrugs VALUES (?, ?, ?, ?, ?)", (drug_id, name, price, purpose, man_id))
 
-# Insert generics
+# Insert Generics
 used_generic_names = set()
-for gen_id in range(1, 16):
+for gen_id in range(1, 206):
     name = generate_drug_name(used_generic_names)
     price = random.randint(10, 50)
     purpose = random.choice(purposes)
     cursor.execute("INSERT INTO Generics VALUES (?, ?, ?, ?)", (gen_id, name, price, purpose))
 
-# Create DrugAlt links (randomly link some drugs to generics)
-for _ in range(20):
-    drug_id = random.randint(1, 20)
-    gen_id = random.randint(1, 15)
-    cursor.execute("INSERT INTO DrugAlt VALUES (?, ?)", (drug_id, gen_id))
+# Insert DrugAlt (map drugs 1-199 to generics 1-199)
+for i in range(1, 200):
+    cursor.execute("INSERT INTO DrugAlt VALUES (?, ?)", (i, i))
 
-# Create Treatment links
-for _ in range(25):
+# Insert Treatment (random valid IDs)
+for i in range(1, 221):
     disease_id = random.randint(1, len(diseases))
-    drug_id = random.randint(1, 20)
-    gen_id = random.randint(1, 15)
+    drug_id = random.randint(1, 199)
+    gen_id = random.randint(1, 205)
     cursor.execute("INSERT INTO Treatment VALUES (?, ?, ?)", (disease_id, drug_id, gen_id))
 
 # Commit and close
 conn.commit()
 conn.close()
-
-print("Fake data with better names inserted successfully.")
