@@ -19,7 +19,7 @@ CREATE TABLE NBDrugs(DrugID int, Name text, Price int, Purpose text, ManID int);
 CREATE TABLE Disease(DiseaseID int, Name text);
 CREATE TABLE Generics(GenID int, Name text, Price int, Purpose text);
 CREATE TABLE DrugAlt(DrugID int, GenID int);
-CREATE TABLE Treatment(DiseaseID int, DrugID int, GenID int);
+CREATE TABLE Treatment(DiseaseID int, DrugID int);
 """)
 
 # Sample data
@@ -88,8 +88,7 @@ for i in range(1, 200):
 for i in range(1, 221):
     disease_id = random.randint(1, len(diseases))
     drug_id = random.randint(1, 199)
-    gen_id = random.randint(1, 205)
-    cursor.execute("INSERT INTO Treatment VALUES (?, ?, ?)", (disease_id, drug_id, gen_id))
+    cursor.execute("INSERT INTO Treatment VALUES (?, ?)", (disease_id, drug_id))
 
 # Commit and close
 conn.commit()

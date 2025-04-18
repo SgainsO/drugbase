@@ -35,7 +35,8 @@ class database:
         FROM Manufacturer AS m
         JOIN NBDrugs AS nbd ON m.ManID = nbd.ManID
         JOIN Treatment AS t ON t.DrugID = nbd.DrugID
-        JOIN Generics AS g ON t.GenID = g.GenID
+        JOIN DrugAlt as da ON da.DrugID = t.DrugID
+        JOIN Generics AS g ON da.GenID = g.GenID
         JOIN Disease AS d ON d.DiseaseID = t.DiseaseID
         WHERE substr(nbd.Name, 1, ?) = ? AND nbd.DrugID > ?
         GROUP BY nbd.DrugID, g.Name, m.Name
@@ -51,7 +52,8 @@ class database:
                     FROM Manufacturer AS m
                     JOIN NBDrugs AS nbd ON m.ManID = nbd.ManID
                     JOIN Treatment AS t ON t.DrugID = nbd.DrugID
-                    JOIN Generics AS g ON t.GenID = g.GenID
+                    JOIN DrugAlt as da ON da.DrugID = t.DrugID
+                    JOIN Generics AS g ON da.GenID = g.GenID
                     JOIN Disease AS d ON d.DiseaseID = t.DiseaseID
                     WHERE substr(d.Name, 1, ?) = ? AND nbd.DrugID > ?
                     ORDER BY nbd.DrugID ASC
@@ -103,9 +105,13 @@ class database:
     def dev_insert_treatment(self, disease_id, drug_id, gen_id):
         cur = self.db.cursor()
         cur.execute("""
-            INSERT INTO Treatment (DiseaseID, DrugID, GenID) 
-            VALUES (?, ?, ?)
-        """, (disease_id, drug_id, gen_id))
+            INSERT INTO Treatment (DiseaseID, DrugID) 
+            VALUES (?, ?)
+        """, (disease_id, drug_id))
+
+        cur.execute("INSERT INTO DrugAlt (DrugID, GenID) VALUES (?,?)", (drug_id, gen_id))
+
+
         self.db.commit()
         cur.close()
         return True

@@ -292,7 +292,7 @@ function DevPage() {
         <h2>Delete Drug</h2>
         <form onSubmit={async (e) => {
           e.preventDefault();
-          if (window.confirm('Are you sure? This will delete all related treatments and alternatives.')) {
+          if (window.confirm('Are you sure? This will delete all related treatments.')) {
             try {
               const response = await fetch(`http://localhost:8000/dev/drug/${formData.deleteDrugId}`, {
                 method: 'DELETE'
