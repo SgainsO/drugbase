@@ -4,6 +4,7 @@ import './App.css';
 import './space-theme.css';
 import LandingPage from './pages/LandingPage';
 import ContentPage from './pages/ContentPage';
+import DevPage from './pages/DevPage';
 import SpaceLoader from './components/SpaceLoader';
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/content" element={<ContentPage />} />
+            <Route path="/dev" element={<DevPage />} />
           </Routes>
         </Router>
       )}
