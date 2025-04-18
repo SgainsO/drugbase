@@ -60,7 +60,103 @@ class database:
         cur.close()
         return results
 
-    
+    def dev_insert_manufacturer(self, name):
+        cur = self.db.cursor()
+        cur.execute("SELECT MAX(ManID) FROM Manufacturer")
+        max_id = cur.fetchone()[0]
+        new_id = 1 if max_id is None else max_id + 1
+        
+        cur.execute("INSERT INTO Manufacturer (ManID, Name) VALUES (?, ?)", 
+                   (new_id, name))
+        self.db.commit()
+        cur.close()
+        return new_id
+
+    def dev_insert_drug(self, name, price, purpose, man_id):
+        cur = self.db.cursor()
+        cur.execute("SELECT MAX(DrugID) FROM NBDrugs")
+        max_id = cur.fetchone()[0]
+        new_id = 1 if max_id is None else max_id + 1
+        
+        cur.execute("""
+            INSERT INTO NBDrugs (DrugID, Name, Price, Purpose, ManID) 
+            VALUES (?, ?, ?, ?, ?)
+        """, (new_id, name, price, purpose, man_id))
+        self.db.commit()
+        cur.close()
+        return new_id
+
+    def dev_insert_generic(self, name, price, purpose):
+        cur = self.db.cursor()
+        cur.execute("SELECT MAX(GenID) FROM Generics")
+        max_id = cur.fetchone()[0]
+        new_id = 1 if max_id is None else max_id + 1
+        
+        cur.execute("""
+            INSERT INTO Generics (GenID, Name, Price, Purpose) 
+            VALUES (?, ?, ?, ?)
+        """, (new_id, name, price, purpose))
+        self.db.commit()
+        cur.close()
+        return new_id
+
+    def dev_insert_treatment(self, disease_id, drug_id, gen_id):
+        cur = self.db.cursor()
+        cur.execute("""
+            INSERT INTO Treatment (DiseaseID, DrugID, GenID) 
+            VALUES (?, ?, ?)
+        """, (disease_id, drug_id, gen_id))
+        self.db.commit()
+        cur.close()
+        return True
+
+    def dev_get_all_manufacturers(self):
+        cur = self.db.cursor()
+        cur.execute("SELECT * FROM Manufacturer ORDER BY ManID")
+        results = cur.fetchall()
+        cur.close()
+        return results
+
+    def dev_get_all_diseases(self):
+        cur = self.db.cursor()
+        cur.execute("SELECT * FROM Disease ORDER BY DiseaseID")
+        results = cur.fetchall()
+        cur.close()
+        return results
+
+    def dev_get_all_drugs(self):
+        cur = self.db.cursor()
+        cur.execute("SELECT DrugID, Name FROM NBDrugs ORDER BY DrugID")
+        results = cur.fetchall()
+        cur.close()
+        return results
+
+    def dev_get_all_generics(self):
+        cur = self.db.cursor()
+        cur.execute("SELECT GenID, Name FROM Generics ORDER BY GenID")
+        results = cur.fetchall()
+        cur.close()
+        return results
+
+    def dev_update_manufacturer_name(self, man_id, new_name):
+        cur = self.db.cursor()
+        cur.execute("UPDATE Manufacturer SET Name = ? WHERE ManID = ?", 
+                   (new_name, man_id))
+        self.db.commit()
+        cur.close()
+        return True
+
+    def dev_delete_drug_cascade(self, drug_id):
+        cur = self.db.cursor()
+        
+        cur.execute("DELETE FROM Treatment WHERE DrugID = ?", (drug_id,))
+        cur.execute("DELETE FROM DrugAlt WHERE DrugID = ?", (drug_id,))
+        cur.execute("DELETE FROM NBDrugs WHERE DrugID = ?", (drug_id,))
+
+        self.db.commit()
+        cur.close()
+        return True
+
 test = database()
 print(test.Drug_Search_Mode_six(0,"Acu"))
 print(test.Disease_Search_Mode_six(0, "Arthritis"))
