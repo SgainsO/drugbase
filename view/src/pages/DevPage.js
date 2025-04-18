@@ -17,7 +17,11 @@ function DevPage() {
     genericPurpose: '',
     diseaseId: '',
     drugId: '',
-    genId: ''
+    genId: '',
+    updateManId: '',
+    updateManName: '',
+    deleteDrugId: '',
+    manufacturerName: ''
   });
 
   useEffect(() => {
