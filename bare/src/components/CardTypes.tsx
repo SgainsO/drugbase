@@ -15,6 +15,7 @@ export type Drug = {
     diseases: string; // This will be a comma-separated string unless you split it
     gPrice: number;
     dPrice: number;
+    gName: string;
   };
 
 export type Multi = {

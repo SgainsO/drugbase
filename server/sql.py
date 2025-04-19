@@ -35,7 +35,8 @@ class database:
             g.GenID AS genID,
             GROUP_CONCAT(DISTINCT d.Name) AS diseases,
             g.price AS gPrice,
-            nbd.price AS dPrice
+            nbd.price AS dPrice,
+            g.Name AS gName
         FROM Manufacturer AS m
         JOIN NBDrugs AS nbd ON m.ManID = nbd.ManID
         JOIN Treatment AS t ON t.DrugID = nbd.DrugID

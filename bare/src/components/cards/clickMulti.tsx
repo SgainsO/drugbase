@@ -19,7 +19,6 @@ type Props = Multi;
         <p><strong>Associated Diseases ({countOfDiseases}):</strong> {diseaseNames}</p>
         <p><strong>Manufacturers:</strong> {manufacturerNames}</p>
         <p><strong>Price:</strong> ${price.toFixed(2)}</p>
-        <Button variant="primary">show graph</Button>
       </div>
     );
   };

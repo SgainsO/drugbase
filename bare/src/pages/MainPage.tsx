@@ -4,6 +4,7 @@ import DrugInfoCard from '../components/cards/clickDrug';
 import MDrugInfoCard from '../components/cards/clickDisease';
 import MultiInfoCard from '../components/cards/clickMulti';
 import { fetchDrugData } from '../utils/api';
+import "./MainPage.css"
 
 const MainPage: React.FC = () => {
   const [Search_Hold, ChangeSearchTerm] = React.useState<string>('');
@@ -52,6 +53,7 @@ const MainPage: React.FC = () => {
           diseases={drug[3]}
           gPrice={drug[4]}
           dPrice={drug[5]}
+          gName={drug[6]}
         />
       ));
     } else if (currentMode === 'disease') {
@@ -108,6 +110,11 @@ const MainPage: React.FC = () => {
     }
     changeLastId(0);
   };
+
+  const ShowGraph = () =>
+  {
+    
+  }
 
   return (
     <div>

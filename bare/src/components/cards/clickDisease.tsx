@@ -20,7 +20,6 @@ const MDrugInfoCard: React.FC<Props> = ({
       <p><strong>Drug:</strong> {DrugName || 'Unknown Drug'}</p>
       <p><strong>Generic Price:</strong> ${Gprice}</p>
       <p><strong>Drug Price:</strong> ${DrugPrice}</p>
-      <Button variant="primary">Show Graph</Button>
     </div>
   );
 };
