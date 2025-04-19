@@ -9,12 +9,14 @@ const MainPage: React.FC = () => {
   const [Search_Hold, ChangeSearchTerm] = React.useState<string>('');
   const [currentMode, ChangeMode] = React.useState<string>('drug');
   const [lastId, changeLastId] = React.useState<number>(0);
-  const [minD, changeMinD] = React.useState<number>(0);
+  const [minD, changeMinD] = React.useState<number>(2);
   const [currentApiData, changeApiData] = React.useState<any[]>([]);
 
+  console.log(minD)
   React.useEffect(() => {
     const loadData = async () => {
-      const data = await fetchDrugData(Search_Hold, lastId, currentMode);
+      console.log(currentMode)
+      const data = await fetchDrugData(Search_Hold, lastId, currentMode, minD);
       changeApiData(data);
       if (data.length > 0) {
         const idField = currentMode === 'disease' ? 'DiseaseID' : 'drugID';
@@ -34,10 +36,9 @@ const MainPage: React.FC = () => {
       }
     };
 
-    if (currentMode !== 'multi') {
-      loadData();
-    }
-  }, [Search_Hold, currentMode]);
+    loadData();
+    
+  }, [Search_Hold, currentMode, minD]);
 
   const renderContent = () => {
     if (currentMode === 'drug') {
@@ -84,8 +85,14 @@ const MainPage: React.FC = () => {
 
   const save = (result: string) => {
     ChangeSearchTerm(result);
-    console.log(result);
   };
+
+  const newAmDisease = (d : number) => {
+    changeMinD(d)
+    changeLastId(0)
+    //Restart
+    console.log(d)
+  } 
 
   const newMode = () => {
     changeApiData([])
@@ -105,18 +112,20 @@ const MainPage: React.FC = () => {
       <button onClick={newMode}>Change Mode</button>
       <div className="content">
         <div className="search">
-          <input
+          
+          { currentMode !== "multi" && (<input
             type="text"
             placeholder="Search..."
             onChange={(e) => save(e.target.value)}
             className="form-control"
-          />
-          <input
+          />)}
+          { currentMode === "multi" &&
+          (<input
             type="number"
-            placeholder="Amount of D"
-            onChange={(e) => changeMinD(parseInt(e.target.value))}
+            placeholder="Amount of Diseases"
+            onChange={(e) => newAmDisease(parseInt(e.target.value))}
             className="form-control"
-          />
+          /> )}
         </div>
         <Button>Previous</Button>
         <Button>Next</Button>

@@ -19,15 +19,20 @@ export const fetchDrugData = async (
   mode: string,
   minDiseases: number = 2
 ): Promise<DrugData[]> => {
+  console.log("Try this");
+
   if (mode !== 'multi' && !searchTerm.trim()) {
     console.log('Empty search term, returning empty results');
     return [];
   }
+  console.log("Try this");
 
   try {
     let endpoint: string;
     const safeSearchTerm = searchTerm.trim() || 'a';
 
+    console.log(mode)
+    console.log(minDiseases)
     if (mode === 'drug') {
       endpoint = `${BASE_URL}/Drug_Search/${lastId}/${encodeURIComponent(safeSearchTerm)}`;
     } else if (mode === 'disease') {
