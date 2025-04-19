@@ -11,6 +11,7 @@ const MainPage: React.FC = () => {
   const [lastId, changeLastId] = React.useState<number>(0);
   const [minD, changeMinD] = React.useState<number>(2);
   const [currentApiData, changeApiData] = React.useState<any[]>([]);
+  const [runByButton, changeRun] = React.useState<boolean>(true)
 
   console.log(minD)
   React.useEffect(() => {
@@ -38,7 +39,7 @@ const MainPage: React.FC = () => {
 
     loadData();
     
-  }, [Search_Hold, currentMode, minD]);
+  }, [Search_Hold, currentMode, minD, runByButton]);
 
   const renderContent = () => {
     if (currentMode === 'drug') {
@@ -85,11 +86,13 @@ const MainPage: React.FC = () => {
 
   const save = (result: string) => {
     ChangeSearchTerm(result);
+    changeLastId(0);
   };
 
-  const newAmDisease = (d : number) => {
+  const newAmDisease = (d : number) => {   
     changeMinD(d)
     changeLastId(0)
+    console.log("added the change ")
     //Restart
     console.log(d)
   } 
@@ -127,8 +130,8 @@ const MainPage: React.FC = () => {
             className="form-control"
           /> )}
         </div>
-        <Button>Previous</Button>
-        <Button>Next</Button>
+        <Button onClick={() => changeLastId(0) }>Restart</Button>
+        <Button onClick={() => changeRun(!runByButton)}>Next</Button>
       </div>
       {renderContent()}
     </div>
