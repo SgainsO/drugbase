@@ -66,7 +66,7 @@ const DrugSearch = ({
         if (results.length > 0) {
           try {
             // Get the correct index for the ID based on the mode
-            const idIndex = queryMode === 'disease' ? 0 : 1;
+            const idIndex = queryMode === 'disease' ? 1 : 1; // DiseaseID is at index 1 in new format
             
             // Find the maximum ID in the results
             const maxId = Math.max(...results.map(item => {
@@ -303,7 +303,7 @@ const DrugSearch = ({
           // Update lastId with the maximum ID from the results
           if (results.length > 0) {
             try {
-              const idIndex = queryMode === 'disease' ? 0 : 1;
+              const idIndex = queryMode === 'disease' ? 1 : 1; // DiseaseID is at index 1 in new format
               const maxId = Math.max(...results.map(item => {
                 const id = Number(item[idIndex]);
                 return isNaN(id) ? 0 : id;
@@ -446,28 +446,28 @@ const DrugSearch = ({
                             <FaAtom color="var(--space-accent)" /> {drug[0] || 'Unknown Drug'}
                           </h3>
                           <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
-                            Generic: {typeof drug[2] === 'string' ? drug[2].split(',').join(', ') : 'N/A'}
+                            Generic ID: {drug[2] || 'N/A'}
                           </p>
                           <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
                             Treatment: {typeof drug[3] === 'string' ? drug[3].split(',').join(', ') : 'N/A'}
                           </p>
                           <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
-                            Manufacturer: {drug[4] || 'Unknown'}
+                            Generic Price: ${drug[4] || 'N/A'} | Brand Price: ${drug[5] || 'N/A'}
                           </p>
                         </>
                       ) : queryMode === 'disease' ? (
                         <>
                           <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <FaAtom color="var(--space-accent)" /> {drug[2] || 'Unknown Disease'}
+                            <FaAtom color="var(--space-accent)" /> {drug[5] || 'Unknown Disease'}
                           </h3>
                           <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
-                            Generic: {drug[1] || 'N/A'} (${drug[4] || 'N/A'})
+                            Generic: {drug[0] || 'N/A'}
                           </p>
                           <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
-                            Manufacturer: {drug[3] || 'Unknown'}
+                            Drug: {drug[6] || 'N/A'}
                           </p>
                           <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
-                            Brand Price: ${drug[5] || 'N/A'}
+                            Generic Price: ${drug[2] || 'N/A'} | Brand Price: ${drug[3] || 'N/A'}
                           </p>
                         </>
                       ) : (

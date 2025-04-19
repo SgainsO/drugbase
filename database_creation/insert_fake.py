@@ -28,7 +28,7 @@ purposes = ["Pain Relief", "Antibiotic", "Anti-inflammatory", "Antiviral", "Bloo
 diseases = ["Flu", "Cold", "Arthritis", "Hypertension", "Infection", "COVID-19"]
 
 prefixes = [
-    "Acu", "Ben", "Cetra", "Dolo", "Exo", "Flora", "Geno", "Hema", "Immu", "Juvo",
+    "Abr", "Acu", "Ben", "Cetra", "Dolo", "Exo", "Flora", "Geno", "Hema", "Immu", "Juvo",
     "Ketra", "Luma", "Myco", "Neuro", "Ortho", "Pedi", "Quanta", "Rena", "Sero", "Thera",
     "Ultra", "Vira", "Well", "Xeno", "Yura", "Zeno", "Allo", "Bio", "Cardi", "Derm",
     "Endo", "Ferro", "Gluco", "Hydro", "Intra", "Janu", "Kali", "Lacto", "Meta", "Natu",
