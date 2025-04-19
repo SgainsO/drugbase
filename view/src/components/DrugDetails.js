@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaAtom, FaChartLine, FaDna } from 'react-icons/fa';
 import { Bar } from 'react-chartjs-2';
-import HeartAttackGraph from './HeartAttackGraph';
+import PriceCompareGraph from './PriceCompareGraph';
 import SpaceLoader from './SpaceLoader';
 import { getChartOptions, getPriceComparisonData } from '../utils/dataProcessing';
 
@@ -142,7 +142,7 @@ const DrugDetails = ({ selectedDrug }) => {
             </button>
           </div>
           
-          <HeartAttackGraph isVisible={showGraph}>
+          <PriceCompareGraph isVisible={showGraph}>
             <div style={{ marginBottom: '40px', justifyContent: 'center', alignItems: 'center'}}>
               <Bar 
                 data={priceComparisonData}
@@ -158,7 +158,7 @@ const DrugDetails = ({ selectedDrug }) => {
                 }}
               />
             </div>
-          </HeartAttackGraph>
+          </PriceCompareGraph>
         </div>
       </motion.div>
     </SpaceLoader>

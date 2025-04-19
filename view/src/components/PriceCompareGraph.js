@@ -1,14 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-/**
- * HeartAttackGraph component for animated graph reveal
- * @param {Object} props - Component props
- * @param {boolean} props.isVisible - Whether the graph is visible
- * @param {React.ReactNode} props.children - Child components to render
- * @returns {JSX.Element} - Rendered component
- */
-const HeartAttackGraph = ({ isVisible, children }) => {
+
+const PriceCompareGraph = ({ isVisible, children }) => {
   return (
     <AnimatePresence>
       {isVisible && (
@@ -40,4 +34,4 @@ const HeartAttackGraph = ({ isVisible, children }) => {
   );
 };
 
-export default HeartAttackGraph;
+export default PriceCompareGraph;

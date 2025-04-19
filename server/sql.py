@@ -29,9 +29,13 @@ class database:
     def Drug_Search_Mode_six(self, num, filter):
         cur = self.db.cursor() 
         cur.execute("""
-        SELECT nbd.Name, nbd.DrugID, g.Name,
-                     GROUP_CONCAT(DISTINCT d.Name),
-                     m.Name, g.price, nbd.price 
+        SELECT 
+            nbd.Name AS name,
+            nbd.DrugID AS drugID,
+            g.GenID AS genID,
+            GROUP_CONCAT(DISTINCT d.Name) AS diseases,
+            g.price AS gPrice,
+            nbd.price AS dPrice
         FROM Manufacturer AS m
         JOIN NBDrugs AS nbd ON m.ManID = nbd.ManID
         JOIN Treatment AS t ON t.DrugID = nbd.DrugID
@@ -48,7 +52,14 @@ class database:
         return results
     def Disease_Search_Mode_six(self, num, filter):
         cur = self.db.cursor() 
-        cur.execute("""SELECT d.DiseaseID, g.Name, d.Name, m.Name, g.price, nbd.price 
+        cur.execute("""SELECT 
+                    g.Name AS GenName,
+                    d.DiseaseID,
+                    g.price AS Gprice,
+                    nbd.price AS DrugPrice,
+                    nbd.DrugID AS drugID,
+                    d.Name AS DiseaseName,
+                    nbd.Name AS DrugName
                     FROM Manufacturer AS m
                     JOIN NBDrugs AS nbd ON m.ManID = nbd.ManID
                     JOIN Treatment AS t ON t.DrugID = nbd.DrugID

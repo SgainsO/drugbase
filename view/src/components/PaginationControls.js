@@ -1,15 +1,7 @@
 import React from 'react';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
-/**
- * Pagination controls component
- * @param {Object} props - Component props
- * @param {Function} props.onPrevPage - Function to handle previous page click
- * @param {Function} props.onNextPage - Function to handle next page click
- * @param {boolean} props.hasPrevPage - Whether there is a previous page
- * @param {boolean} props.hasNextPage - Whether there is a next page
- * @returns {JSX.Element} - Rendered component
- */
+
 const PaginationControls = ({ onPrevPage, onNextPage, hasPrevPage, hasNextPage }) => {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', marginTop: '30px', gap: '20px' }}>

@@ -30,30 +30,30 @@ export const processDrugData = (drugData, queryMode) => {
   }
 
   if (queryMode === 'drug') {
-    // Format: [Name, DrugID, GenericNames, DiseaseNames, ManufacturerName, generic_price, brand_price]
+    // Format: [name, drugID, genID, diseases, gPrice, dPrice]
     return {
-      id: drugData[1] || 0,
-      name: drugData[0] || 'Unknown Drug',
-      genericName: drugData[2]?.split(',').join(', ') || 'N/A',
-      treatment: drugData[3]?.split(',') || ['N/A'],
-      manufacturer: drugData[4] || 'Unknown',
-      price: drugData[6] || 0,
-      genericPrice: drugData[5] || 0,
+      id: drugData[1] || 0,      // drugID
+      name: drugData[0] || 'Unknown Drug', // name
+      genericName: `Generic ID: ${drugData[2]}` || 'N/A', // genID
+      treatment: drugData[3]?.split(',') || ['N/A'], // diseases
+      manufacturer: 'Pharmaceutical Company',
+      price: drugData[5] || 0,    // dPrice
+      genericPrice: drugData[4] || 0, // gPrice
       effectiveness: sampleEffectiveness,
       sideEffects: sampleSideEffects,
       years: sampleYears,
       description: `A pharmaceutical drug used to treat various conditions.`
     };
   } else if (queryMode === 'disease') {
-    // Format: [DiseaseID, GenericName, DiseaseName, ManufacturerName, GenericPrice, BrandPrice]
+    // Format: [GenName, DiseaseID, Gprice, DrugPrice, drugID, DiseaseName, DrugName]
     return {
-      id: drugData[0] || 0,
-      name: `Treatment for ${drugData[2] || 'Unknown Disease'}`,
-      genericName: drugData[1] || 'N/A',
-      treatment: [drugData[2] || 'N/A'],
-      manufacturer: drugData[3] || 'Unknown',
-      price: drugData[5] || 199.99,
-      genericPrice: drugData[4] || 99.99,
+      id: drugData[1] || 0, // DiseaseID
+      name: `Treatment for ${drugData[5] || 'Unknown Disease'}`, // Using DiseaseName
+      genericName: drugData[0] || 'N/A', // GenName
+      treatment: [drugData[5] || 'Unknown Disease'], // DiseaseName
+      manufacturer: 'Pharmaceutical Company',
+      price: drugData[3] || 199.99, // DrugPrice
+      genericPrice: drugData[2] || 99.99, // Gprice
       effectiveness: sampleEffectiveness,
       sideEffects: sampleSideEffects,
       years: sampleYears,
