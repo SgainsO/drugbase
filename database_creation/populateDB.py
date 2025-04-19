@@ -6,10 +6,10 @@ def populate():
     c = conn.cursor()
 
     #Getting drugID and drug name from FDA data
-    df_drugs = pd.read_csv('./drugbase/database_creation/FDAdata.txt', sep='\t', on_bad_lines='skip')
+    df_drugs = pd.read_csv('FDAdata.txt', sep='\t', on_bad_lines='skip')
 
     #Getting manufacturer names from FDA manufacturers data
-    df_manu = pd.read_csv('./drugbase/database_creation/FDAManu.txt', sep='\t', on_bad_lines='skip')
+    df_manu = pd.read_csv('FDAManu.txt', sep='\t', on_bad_lines='skip')
 
     #to see first few rows of data from FDA text files
     #print(df_drugs.head())
@@ -34,15 +34,23 @@ def populate():
                     VALUES (?, ?)""", (manuID, manu_name))
             allManu[manu_name] = manuID
             manuID += 1   #manually increment manufacturer IDs
-        
-        #map manufacturer ID to the name 
-        manuID = allManu[manu_name]; 
 
         #Insert drug info into name brand drug table
         c.execute("""INSERT OR IGNORE INTO NBDrugs (DrugID, Name, Price, Purpose, ManID)
             VALUES (?, ?, ?, ?, ?)""", 
             (drug_id, drug_name, 0, 'info', manuID))
 
+    conn.commit()
+    conn.close()
+
+def main(): 
+    conn = sqlite3.connect('drug.db')
+    c = conn.cursor()
+
+    # Populate the database with data
+    populate()
+
+    # Commit changes and close the connection
     conn.commit()
     conn.close()
 

@@ -50,6 +50,15 @@ def create_tables():
 
     conn.commit()
     conn.close()
+    
+def main():
+    conn = sqlite3.connect('drug.db')
+    c = conn.cursor()
+
+    create_tables(c)
+
+    conn.commit()
+    conn.close()
 
 if __name__ == "__main__": 
     create_tables()
