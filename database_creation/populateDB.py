@@ -11,6 +11,9 @@ def populate():
     #Getting manufacturer names from FDA manufacturers data
     df_manu = pd.read_csv('FDAManu.txt', sep='\t', on_bad_lines='skip')
 
+    #Get side effects for NBDrugs (dont know if another table should be made or if we should just try to match based on drug name)
+    #df_effects = pd.read_csv('drugEffects.tsv', sep='\t', on_bad_lines='skip')
+
     #to see first few rows of data from FDA text files
     #print(df_drugs.head())
     #print(df_manu.head())
