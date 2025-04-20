@@ -60,9 +60,8 @@ const DrugInfoCard: React.FC<Props> = ({
       <div className="drug-info-card">
         <h3>{name}</h3>
         <p><strong>Drug ID:</strong> {drugID}</p>
-        <p><strong>Generic ID:</strong> {genID}</p>
+        <p><strong>Generic Alernative:</strong> {gName}</p>
         <p><strong>Associated Diseases ({diseases.length})</strong></p>
-        <p><strong>Generic Drug Name:</strong> {gName}</p>
         <p><strong>Generic Price:</strong> ${gPrice.toFixed(2)}</p>
         <p><strong>Drug Price:</strong> ${dPrice.toFixed(2)}</p>
         <Button onClick={() => ChangeGraph(!ShowGraph)}>Show</Button>

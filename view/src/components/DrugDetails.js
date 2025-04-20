@@ -12,14 +12,32 @@ import { getChartOptions, getPriceComparisonData } from '../utils/dataProcessing
  * @param {Object} props.selectedDrug - The selected drug data
  * @returns {JSX.Element} - Rendered component
  */
-const DrugDetails = ({ selectedDrug }) => {
+  const DrugDetails = ({ selectedDrug }) => {
   const [showGraph, setShowGraph] = React.useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [description, setDesctiption] = useState(true);
+  
   const graphRef = useRef(null);
   
   // Safely determine if this is a multi-disease drug
   const isMultiDiseaseDrug = selectedDrug && selectedDrug.diseaseCount !== undefined;
   
+  useEffect(() =>{
+    const getDescription= async () =>
+    {
+      try {
+        const response = await fetch(`http://localhost:8000/desc/${selectedDrug.name}`);
+        const data = await response.json();
+        setDesctiption(data.data); // assuming response is { data: ... }
+        console.log("Description being gotten")
+      } catch (error) {
+        console.error("Failed to fetch drug description:", error);
+      }
+    }
+    getDescription()
+  }, [selectedDrug])
+
+
   // Simulate loading effect when drug changes
   useEffect(() => {
     if (selectedDrug) {
@@ -128,7 +146,7 @@ const DrugDetails = ({ selectedDrug }) => {
           <p><strong>Generic Name:</strong> {selectedDrug.genericName}</p>
           <p><strong>Manufacturer:</strong> {selectedDrug.manufacturer}</p>
           <p><strong>Treatment for:</strong> {Array.isArray(selectedDrug.treatment) ? selectedDrug.treatment.join(', ') : selectedDrug.treatment}</p>
-          <p><strong>Description:</strong> {selectedDrug.description}</p>
+          <p><strong>Side Effects:</strong> {description}</p>
         </div>
         
         <div ref={graphRef} style={{ position: 'relative' }}>

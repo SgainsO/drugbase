@@ -446,13 +446,13 @@ const DrugSearch = ({
                             <FaAtom color="var(--space-accent)" /> {drug[0] || 'Unknown Drug'}
                           </h3>
                           <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
-                            Generic ID: {drug[2] || 'N/A'}
+                            Generic Name: {drug[6] || 'N/A'}
                           </p>
                           <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
                             Treatment: {typeof drug[3] === 'string' ? drug[3].split(',').join(', ') : 'N/A'}
                           </p>
                           <p style={{ color: 'var(--space-text-secondary)', marginBottom: '10px' }}>
-                            Generic Price: ${drug[4] || 'N/A'} | Brand Price: ${drug[5] || 'N/A'}
+                            Generic Alternative Price: ${drug[4] || 'N/A'} | Brand Price: ${drug[5] || 'N/A'}
                           </p>
                         </>
                       ) : queryMode === 'disease' ? (
