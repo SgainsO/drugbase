@@ -1,4 +1,6 @@
-![image](https://t3.ftcdn.net/jpg/02/85/69/80/360_F_285698022_bfZdOHbLGkg4BadIWNkKLReNEYnjyxgP.jpg)
+
+<img src="![drawing.jpg](https://t3.ftcdn.net/jpg/02/85/69/80/360_F_285698022_bfZdOHbLGkg4BadIWNkKLReNEYnjyxgP.jpg)" alt="drawing" style="width:200px height:100px;"/>
+
 
 ## WHY WE MADE THIS
 * It is pretty known that drugs are notoriously expensive
