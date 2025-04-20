@@ -55,6 +55,10 @@ async def get_drugs():
 async def get_generics():
     return {"data": client.dev_get_all_generics()}
 
+@app.get("/desc/{name}")
+async def get_description(name):
+    return {"data": client.Get_Description_Drug(name)}
+
 @app.post("/dev/manufacturer")
 async def add_manufacturer(name: str):
     new_id = client.dev_insert_manufacturer(name)

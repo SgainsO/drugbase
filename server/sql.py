@@ -74,6 +74,19 @@ class database:
         cur.close()
         return results
 
+    def Get_Description_Drug(self, drugName):
+        cur = self.db.cursor()
+        cur.execute(
+            """
+            SELECT Purpose FROM NBDrugs WHERE Name = ?; 
+            """, 
+            (drugName,)
+        ) 
+        results = cur.fetchall()
+        cur.close()
+        return results
+
+
     def dev_insert_manufacturer(self, name):
         cur = self.db.cursor()
         cur.execute("SELECT MAX(ManID) FROM Manufacturer")
@@ -120,10 +133,7 @@ class database:
             INSERT INTO Treatment (DiseaseID, DrugID) 
             VALUES (?, ?)
         """, (disease_id, drug_id))
-
         cur.execute("INSERT INTO DrugAlt (DrugID, GenID) VALUES (?,?)", (drug_id, gen_id))
-
-
         self.db.commit()
         cur.close()
         return True
