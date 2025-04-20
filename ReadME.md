@@ -7,8 +7,7 @@
 ## Directory Info
 * Bare contains a web interface with no styling 
 * We are providing this because we believe in 'developing in public', 
-    * That is, we are open to the world knowing how we started
-
+    * That is, we are open to the world knowing the project in its infancy
 ## View 
 * Full feature rich website with a user-friendly UI
 
