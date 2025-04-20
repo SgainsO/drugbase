@@ -5,11 +5,16 @@
     * We felt that their does not exist a simple way for people to get access to alternatives for branded drugs
 
 ## Directory Info
-* Bare contains a web interface with no styling 
+### Bare
+* Contains a web interface with no styling 
 * We are providing this because we believe in 'developing in public', 
     * That is, we are open to the world knowing the project in its infancy
-## View 
+### View 
 * Full feature rich website with a user-friendly UI
 
-## Database Creation 
-* Where we show the process in creating our database, with the sources cited.
+### Database Creation 
+* Where we show the process in creating our database, with the sources cited
+
+### Server
+* For running the FastAPI backend
+
